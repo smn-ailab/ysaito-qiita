@@ -4,7 +4,8 @@
 ### propensity-score
 <p> 傾向スコア関連記事の実験ファイルやツール</p>
 <p>該当記事<br>
- ・ 『傾向スコアせセレクションバイアスを補正する』(https://qiita.com/saitoy/items/09daccdd91bc98c21dff)<br>
+ ・ 『傾向スコアせセレクションバイアスを補正する』
+https://qiita.com/saitoy/items/09daccdd91bc98c21dff<br>
 </p>
  
 ### uplift-modeling
