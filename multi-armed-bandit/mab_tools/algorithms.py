@@ -8,10 +8,6 @@ import numpy as np
 class MABInterface(ABC):
 
     @abstractmethod
-    def initialize(self) -> None:
-        pass
-
-    @abstractmethod
     def select_arm(self) -> None:
         pass
 
@@ -21,10 +17,8 @@ class MABInterface(ABC):
 
 
 class EpsilonGreedy(MABInterface):
-    def __init__(self, epsilon: float) -> None:
+    def __init__(self, epsilon: float, n_arms: int) -> None:
         self.epsilon = epsilon
-
-    def initialize(self, n_arms: int) -> None:
         self.n_arms = n_arms
         self.counts = [0] * self.n_arms
         self.values = [0.0] * self.n_arms
@@ -45,10 +39,8 @@ class EpsilonGreedy(MABInterface):
 
 
 class SoftMax(MABInterface):
-    def __init__(self, temperature: float) -> None:
+    def __init__(self, temperature: float, n_arms: int) -> None:
         self.temperature = temperature
-
-    def initialize(self, n_arms: int) -> None:
         self.n_arms = n_arms
         self.counts = [0] * self.n_arms
         self.values = [0.0] * self.n_arms
@@ -67,21 +59,18 @@ class SoftMax(MABInterface):
 
 
 class UCB1(MABInterface):
-
-    def initialize(self, n_arms: int) -> None:
+    def __init__(self, n_arms: int) -> None:
         self.n_arms = n_arms
         self.counts = [0] * self.n_arms
         self.values = [0.0] * self.n_arms
 
     def select_arm(self) -> int:
-        n_arms = len(self.counts)
-
         if 0 in self.counts:
             result = self.counts.index(0)
         else:
             ucb_values = [0.0] * self.n_arms
             total_counts = sum(self.counts)
-            for arm in range(n_arms):
+            for arm in range(self.n_arms):
                 bonus = math.sqrt(2 * math.log(total_counts) / self.counts[arm])
                 ucb_values[arm] = self.values[arm] + bonus
             result = np.argmax(ucb_values)
@@ -97,11 +86,9 @@ class UCB1(MABInterface):
 
 
 class TompsonSampling(MABInterface):
-    def __init__(self, alpha=1.0, beta=1.0) -> None:
+    def __init__(self, n_arms: int, alpha=1.0, beta=1.0) -> None:
         self.alpha = alpha
         self.beta = beta
-
-    def initialize(self, n_arms: int) -> None:
         self.n_arms = n_arms
         self.counts_alpha = [0] * self.n_arms
         self.counts_beta = [0] * self.n_arms

@@ -1,3 +1,4 @@
+import copy
 import math
 import random
 
@@ -32,8 +33,8 @@ def sim_mabs(algo_list: list, arms: list, num_sims: int, horizon: int) -> list:
         times = np.zeros(num_sims * horizon)
 
         for sim in range(num_sims):
+            a = copy.deepcopy(algo)
             sim = sim + 1
-            algo.initialize(len(arms))
 
             for t in range(horizon):
                 t += 1
@@ -41,10 +42,10 @@ def sim_mabs(algo_list: list, arms: list, num_sims: int, horizon: int) -> list:
                 sim_nums[index] = sim
                 times[index] = t
 
-                chosen_arm = algo.select_arm()
+                chosen_arm = a.select_arm()
                 chosen_arms[index] = chosen_arm
 
-                reward = arms[chosen_arms[index]].draw()
+                reward = arms[chosen_arm].draw()
                 rewards[index] = reward
 
                 if t == 1:
@@ -52,7 +53,7 @@ def sim_mabs(algo_list: list, arms: list, num_sims: int, horizon: int) -> list:
                 else:
                     cumulative_rewards[index] = cumulative_rewards[index - 1] + reward
 
-                algo.update(chosen_arm, reward)
+                a.update(chosen_arm, reward)
 
         sim_data = [sim_nums, times, chosen_arms, rewards, cumulative_rewards]
         df = DataFrame({"sim_nums": sim_data[0],
