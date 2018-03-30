@@ -1,32 +1,33 @@
 import math
 import random
+from abc import ABC, abstractmethod
 
 import numpy as np
 
 
-class MABInterface:
-    def __init__(self) -> None:
-        pass
+class MABInterface(ABC):
 
+    @abstractmethod
     def initialize(self) -> None:
         pass
 
+    @abstractmethod
     def select_arm(self) -> None:
         pass
 
+    @abstractmethod
     def update(self) -> None:
         pass
 
 
 class EpsilonGreedy(MABInterface):
-    def __init__(self, epsilon: float, counts: int, values: float) -> None:
+    def __init__(self, epsilon: float) -> None:
         self.epsilon = epsilon
-        self.counts = counts
-        self.values = values
 
     def initialize(self, n_arms: int) -> None:
-        self.counts = [0] * n_arms
-        self.values = [0.0] * n_arms
+        self.n_arms = n_arms
+        self.counts = [0] * self.n_arms
+        self.values = [0.0] * self.n_arms
 
     def select_arm(self) -> int:
         result = random.randrange(len(self.values))
@@ -44,14 +45,13 @@ class EpsilonGreedy(MABInterface):
 
 
 class SoftMax(MABInterface):
-    def __init__(self, temperature: float, counts: int, values: float) -> None:
+    def __init__(self, temperature: float) -> None:
         self.temperature = temperature
-        self.counts = counts
-        self.values = values
 
     def initialize(self, n_arms: int) -> None:
-        self.counts = [0] * n_arms
-        self.values = [0.0] * n_arms
+        self.n_arms = n_arms
+        self.counts = [0] * self.n_arms
+        self.values = [0.0] * self.n_arms
 
     def select_arm(self) -> int:
         z = sum([math.exp(v / self.temperature) for v in self.values])
@@ -67,13 +67,11 @@ class SoftMax(MABInterface):
 
 
 class UCB1(MABInterface):
-    def __init__(self, counts: int, values: float) -> None:
-        self.counts = counts
-        self.values = values
 
     def initialize(self, n_arms: int) -> None:
-        self.counts = [0] * n_arms
-        self.values = [0.0] * n_arms
+        self.n_arms = n_arms
+        self.counts = [0] * self.n_arms
+        self.values = [0.0] * self.n_arms
 
     def select_arm(self) -> int:
         n_arms = len(self.counts)
@@ -81,7 +79,7 @@ class UCB1(MABInterface):
         if 0 in self.counts:
             result = self.counts.index(0)
         else:
-            ucb_values = [0.0] * n_arms
+            ucb_values = [0.0] * self.n_arms
             total_counts = sum(self.counts)
             for arm in range(n_arms):
                 bonus = math.sqrt(2 * math.log(total_counts) / self.counts[arm])
@@ -99,17 +97,15 @@ class UCB1(MABInterface):
 
 
 class TompsonSampling(MABInterface):
-    def __init__(self, counts_alpha: float, counts_beta: float, values: float, alpha=1.0: float, beta=1.0: float) -> None:
-        self.counts_alpha = counts_alpha
-        self.counts_beta = counts_beta
-        self.values = values
+    def __init__(self, alpha=1.0, beta=1.0) -> None:
         self.alpha = alpha
         self.beta = beta
 
     def initialize(self, n_arms: int) -> None:
-        self.counts_alpha = [0.0] * n_arms
-        self.counts_beta = [0.0] * n_arms
-        self.values = [0.0] * n_arms
+        self.n_arms = n_arms
+        self.counts_alpha = [0] * self.n_arms
+        self.counts_beta = [0] * self.n_arms
+        self.values = [0.0] * self.n_arms
 
     def select_arm(self) -> int:
         theta = [random.betavariate(self.counts_alpha[arm] + self.alpha,
