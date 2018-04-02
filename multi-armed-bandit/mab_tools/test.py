@@ -1,6 +1,5 @@
+"""This Module contains tools to evaluate Multi-Armed Bandit Algorithms."""
 import copy
-import math
-import random
 
 import numpy as np
 import pandas as pd
@@ -13,17 +12,33 @@ from plotly.offline import init_notebook_mode, iplot, plot
 
 
 class BernoulliArm():
+    """Arm which gives reward(0.0 or 1.0) from a given bernoulli distribution."""
+
     def __init__(self, p: float) -> None:
+        """Initialize class.
+
+        :param p: the parameter of the bernoulli distribution.
+        """
         self.p = p
 
     def draw(self) -> float:
-        if random.random() > self.p:
+        """Drow the arm to get a reward."""
+        if np.random.rand() > self.p:
             return 0.0
         else:
             return 1.0
 
 
 def sim_mabs(algo_list: list, arms: list, num_sims: int, horizon: int) -> list:
+    """Run experiments on Multi-Armed Bandit problem using several algorithms.
+
+    :param algo_list: a list of algorithms which are to be evaluated.
+    :param arms: a list of arm.
+    :param num_sims: the num of simulations.
+    :param horizon: the num of trial in a single simulation.
+
+    :return: a list of pd.DataFrame which contains results of the simulations for earch algorithms.
+    """
     sim_data_list = []
     for algo in algo_list:
         chosen_arms = np.zeros(num_sims * horizon)
@@ -68,8 +83,15 @@ def sim_mabs(algo_list: list, arms: list, num_sims: int, horizon: int) -> list:
     return sim_data_list
 
 
-def average_rewards(df_list: list, name_list: list) -> None:
+def average_rewards(df_list: list, name_list: list) -> go.Scatter:
+    """Evaluate the ability to explore the best arm during the given trials.
 
+    :param df_list: a list of pd.DataFrame which contains results of the simulations for earch algorithms.
+                    the output of the function sim_mabs.
+    :param name_list: a list of the name of algorithms which are to be evaluated.
+
+    :return: a scatter plot whose x and y axis are the num of trials and average rewards for each trial respectively.
+    """
     data = []
     for df, name in zip(df_list, name_list):
         trace = Scatter(x=df.mean(level="times").index,
@@ -87,8 +109,15 @@ def average_rewards(df_list: list, name_list: list) -> None:
     iplot(fig)
 
 
-def cumulative_rewards(df_list: list, name_list: list) -> None:
+def cumulative_rewards(df_list: list, name_list: list) -> go.Scatter:
+    """Evaluate the ability to maximize the cumulative reward during the given trials.
 
+    :param df_list: a list of pd.DataFrame which contains results of the simulations for earch algorithms.
+                    the output of the function sim_mabs.
+    :param name_list: a list of the name of algorithms which are to be evaluated.
+
+    :return: a scatter plot whose x and y axis are the num of trials and cumulative rewards for each trial respectively.
+    """
     data = []
     for df, name in zip(df_list, name_list):
         trace = Scatter(x=df.mean(level="times").index,
