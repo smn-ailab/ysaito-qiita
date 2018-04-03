@@ -38,7 +38,7 @@ class EpsilonGreedy(MABInterface):
 
         :return: index of the selected arm.
         """
-        result = random.randrange(len(self.values))
+        result = random.randrange(self.values.shape[0])
         if np.random.rand() > self.epsilon:
             result = np.argmax(self.values)
         return result
@@ -78,7 +78,7 @@ class SoftMax(MABInterface):
         """
         z = np.sum(np.exp(self.values) / self.temperature)
         probs = (np.exp(self.values) / self.temperature) / z
-        return np.random.choice(len(self.counts), p=probs)
+        return np.random.choice(self.counts.shape[0], p=probs)
 
     def update(self, chosen_arm: int, reward: float) -> None:
         """Update the information about the arms.
