@@ -21,6 +21,7 @@
 - [傾向スコアを用いて観察データからUpliftをモデリングする][3-2]
 - [傾向スコアを用いて観察データからUpliftをモデリングする（おまけ）][3-3]
 
+ [1-1]:https://qiita.com/saitoy/items/ad15394547bd5daf8937
 
  [2-1]:https://qiita.com/saitoy/items/09daccdd91bc98c21dff
 
