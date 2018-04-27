@@ -1,5 +1,6 @@
 """This Module contains tools to evaluate Multi-Armed Bandit Algorithms."""
 import copy
+import time
 
 import numpy as np
 import pandas as pd
@@ -29,7 +30,8 @@ class BernoulliArm():
             return 1.0
 
 
-def sim_mabs(algo_list: list, arms: list, num_sims: int, horizon: int) -> list:
+def sim_mabs_bern(algo_list: list, arms: list, num_sims: int, horizon: int, algo_name: list,
+                  batch: bool =False, batch_size: int =0) -> list:
     """Run experiments on Multi-Armed Bandit problem using several algorithms.
 
     :param algo_list: a list of algorithms which are to be evaluated.
@@ -40,27 +42,31 @@ def sim_mabs(algo_list: list, arms: list, num_sims: int, horizon: int) -> list:
     :return: a list of pd.DataFrame which contains results of the simulations for earch algorithms.
     """
     sim_data_list = []
-    for algo in algo_list:
+    for i, algo in enumerate(algo_list):
         chosen_arms = np.zeros(num_sims * horizon)
         rewards = np.zeros(num_sims * horizon)
         cumulative_rewards = np.zeros(num_sims * horizon)
+        successes = np.zeros(num_sims * horizon)
         sim_nums = np.zeros(num_sims * horizon)
         times = np.zeros(num_sims * horizon)
+        elapsed_time = np.zeros(num_sims)
+        if batch:
+            algo.batch_size = batch_size
 
         for sim in range(num_sims):
             a = copy.deepcopy(algo)
-            sim = sim + 1
+            start = time.time()
 
             for t in range(horizon):
                 t += 1
-                index = (sim - 1) * horizon + t - 1
-                sim_nums[index] = sim
+                index = sim * horizon + t - 1
+                sim_nums[index] = sim + 1
                 times[index] = t
 
                 chosen_arm = a.select_arm()
                 chosen_arms[index] = chosen_arm
 
-                reward = arms[chosen_arm].draw()
+                reward = np.random.binomial(n=1, p=arms[chosen_arm])
                 rewards[index] = reward
 
                 if t == 1:
@@ -68,14 +74,23 @@ def sim_mabs(algo_list: list, arms: list, num_sims: int, horizon: int) -> list:
                 else:
                     cumulative_rewards[index] = cumulative_rewards[index - 1] + reward
 
-                a.update(chosen_arm, reward)
+                if chosen_arm == np.argmax(arms):
+                    successes[index] = 1
 
-        sim_data = [sim_nums, times, chosen_arms, rewards, cumulative_rewards]
+                if batch:
+                    a.batch_update(chosen_arm, reward)
+                else:
+                    a.update(chosen_arm, reward)
+            elapsed_time[sim] = time.time() - start
+
+        print(f"Avg Elapsed Time({horizon} iter) {algo_name[i]} : {round(np.mean(elapsed_time), 3)}s")
+        sim_data = [sim_nums, times, chosen_arms, rewards, cumulative_rewards, successes]
         df = DataFrame({"sim_nums": sim_data[0],
                         "times": sim_data[1],
                         "chosen_arm": sim_data[2],
                         "reward": sim_data[3],
-                        "cumulative_rewards": sim_data[4]
+                        "cumulative_rewards": sim_data[4],
+                        "successes": sim_data[5],
                         }).set_index(["sim_nums", "times"])
 
         sim_data_list.append(df)
@@ -96,6 +111,8 @@ def average_rewards(df_list: list, name_list: list) -> go.Scatter:
     for df, name in zip(df_list, name_list):
         trace = Scatter(x=df.mean(level="times").index,
                         y=df.mean(level="times").reward,
+                        opacity=0.9,
+                        line={"width": 1.5},
                         mode="lines",
                         name=f"{name}")
 
@@ -103,8 +120,8 @@ def average_rewards(df_list: list, name_list: list) -> go.Scatter:
 
     layout = go.Layout(
         xaxis=dict(title="Times"),
-        yaxis=dict(title="Average Reward"),
-        title="Performance of Algorithms")
+        yaxis=dict(title="Average Rewards"),
+        title="Average Rewards")
     fig = go.Figure(data=data, layout=layout)
     iplot(fig)
 
@@ -123,6 +140,7 @@ def cumulative_rewards(df_list: list, name_list: list) -> go.Scatter:
         trace = Scatter(x=df.mean(level="times").index,
                         y=df.mean(level="times").cumulative_rewards,
                         mode="lines",
+                        line={"width": 3},
                         name=f"{name}")
 
         data.append(trace)
@@ -130,6 +148,26 @@ def cumulative_rewards(df_list: list, name_list: list) -> go.Scatter:
     layout = go.Layout(
         xaxis=dict(title="Times"),
         yaxis=dict(title="Average Reward"),
-        title="Cumulative Reward of Algorithms")
+        title="Cumulative Rewards")
+    fig = go.Figure(data=data, layout=layout)
+    iplot(fig)
+
+
+def success_rate(df_list: list, name_list: list) -> go.Scatter:
+    data = []
+    for df, name in zip(df_list, name_list):
+        trace = Scatter(x=df.mean(level="times").index,
+                        y=df.mean(level="times").successes,
+                        opacity=0.9,
+                        line={"width": 1.5},
+                        mode="lines",
+                        name=f"{name}")
+
+        data.append(trace)
+
+    layout = go.Layout(
+        xaxis=dict(title="Times"),
+        yaxis=dict(title="Successes Rate"),
+        title="Average Successes Rates")
     fig = go.Figure(data=data, layout=layout)
     iplot(fig)

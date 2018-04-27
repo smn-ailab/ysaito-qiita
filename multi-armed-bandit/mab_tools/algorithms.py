@@ -18,11 +18,16 @@ class MABInterface(ABC):
         """Update the information about the arms."""
         pass
 
+    @abstractmethod
+    def batch_update(self) -> None:
+        """Update the information about the arms."""
+        pass
+
 
 class EpsilonGreedy(MABInterface):
     """Epsilon Greedy Algorithm for Multi-Armed Bandit problems."""
 
-    def __init__(self, epsilon: float, n_arms: int) -> None:
+    def __init__(self, epsilon: float, n_arms: int, batch_size: int=None) -> None:
         """Initialize class.
 
         :param epsilon:  the hyper-parameter which represents how often the algorithm explore.
@@ -32,6 +37,10 @@ class EpsilonGreedy(MABInterface):
         self.n_arms = n_arms
         self.counts = np.zeros(self.n_arms)
         self.values = np.zeros(self.n_arms)
+
+        self._values = np.zeros(self.n_arms)
+        self.batch_size = batch_size
+        self.data_size = 0
 
     def select_arm(self) -> int:
         """Decide which arm should be selected.
@@ -56,11 +65,24 @@ class EpsilonGreedy(MABInterface):
         new_value = (value * (n - 1) / n) + reward / n
         self.values[chosen_arm] = new_value
 
+    def batch_update(self, chosen_arm: int, reward: float) -> None:
+        self.data_size += 1
+        self.counts[chosen_arm] += 1
+        n = self.counts[chosen_arm]
+        value = self._values[chosen_arm]
+        new_value = (value * (n - 1) / n) + reward / n
+        self._values[chosen_arm] = new_value
+
+        if self.data_size % self.batch_size == 0:
+            self.values = self._values
+        else:
+            pass
+
 
 class SoftMax(MABInterface):
     """SoftMax Algorithm for Multi-Armed Bandit problems."""
 
-    def __init__(self, temperature: float, n_arms: int) -> None:
+    def __init__(self, temperature: float, n_arms: int, batch_size: int=None) -> None:
         """Initialize class.
 
         :param temperature:  the hyper-parameter which represents how much the algorithm uses explored information about arms.
@@ -70,6 +92,10 @@ class SoftMax(MABInterface):
         self.n_arms = n_arms
         self.counts = np.zeros(self.n_arms)
         self.values = np.zeros(self.n_arms)
+
+        self._values = np.zeros(self.n_arms)
+        self.batch_size = batch_size
+        self.data_size = 0
 
     def select_arm(self) -> int:
         """Decide which arm should be selected.
@@ -92,11 +118,24 @@ class SoftMax(MABInterface):
         new_value = ((n - 1) / n) * self.values[chosen_arm] + (1 / n) * reward
         self.values[chosen_arm] = new_value
 
+    def batch_update(self, chosen_arm: int, reward: float) -> None:
+        self.data_size += 1
+        self.counts[chosen_arm] += 1
+        n = self.counts[chosen_arm]
+        value = self._values[chosen_arm]
+        new_value = (value * (n - 1) / n) + reward / n
+        self._values[chosen_arm] = new_value
+
+        if self.data_size % self.batch_size == 0:
+            self.values = self._values
+        else:
+            pass
+
 
 class UCB1(MABInterface):
     """Upper Confidence Bound1 Algorithm for Multi-Armed Bandit problems."""
 
-    def __init__(self, n_arms: int) -> None:
+    def __init__(self, n_arms: int, batch_size: int=None) -> None:
         """Initialize class.
 
         :param n_arms: the number of given arms.
@@ -104,6 +143,10 @@ class UCB1(MABInterface):
         self.n_arms = n_arms
         self.counts = np.zeros(self.n_arms)
         self.values = np.zeros(self.n_arms)
+
+        self._values = np.zeros(self.n_arms)
+        self.batch_size = batch_size
+        self.data_size = 0
 
     def select_arm(self) -> int:
         """Decide which arm should be selected.
@@ -133,11 +176,24 @@ class UCB1(MABInterface):
         new_value = ((n - 1) / n) * self.values[chosen_arm] + (1 / n) * reward
         self.values[chosen_arm] = new_value
 
+    def batch_update(self, chosen_arm: int, reward: float) -> None:
+        self.data_size += 1
+        self.counts[chosen_arm] += 1
+        n = self.counts[chosen_arm]
+        value = self._values[chosen_arm]
+        new_value = (value * (n - 1) / n) + reward / n
+        self._values[chosen_arm] = new_value
 
-class TompsonSampling(MABInterface):
-    """Tompson Sampling Algorithm for Multi-Armed Bandit problems."""
+        if self.data_size % self.batch_size == 0:
+            self.values = self._values
+        else:
+            pass
 
-    def __init__(self, n_arms: int, alpha=1.0, beta=1.0) -> None:
+
+class ThompsonSampling(MABInterface):
+    """Thompson Sampling Algorithm for Multi-Armed Bandit problems."""
+
+    def __init__(self, n_arms: int, alpha=1.0, beta=1.0, batch_size: int=None) -> None:
         """Initialize class.
 
         :param n_arms: the number of given arms.
@@ -147,9 +203,14 @@ class TompsonSampling(MABInterface):
         self.alpha = alpha
         self.beta = beta
         self.n_arms = n_arms
+        self.counts = np.zeros(self.n_arms)
         self.counts_alpha = np.zeros(self.n_arms)
         self.counts_beta = np.zeros(self.n_arms)
-        self.values = np.zeros(self.n_arms)
+
+        self._counts_alpha = np.zeros(self.n_arms)
+        self._counts_beta = np.zeros(self.n_arms)
+        self.batch_size = batch_size
+        self.data_size = 0
 
     def select_arm(self) -> int:
         """Decide which arm should be selected.
@@ -165,12 +226,22 @@ class TompsonSampling(MABInterface):
         :param chosen_arm: index of the chosen arm.
         :param reward: reward from the chosen arm.
         """
+        self.counts[chosen_arm] += 1
         if reward == 1:
             self.counts_alpha[chosen_arm] += 1
         else:
             self.counts_beta[chosen_arm] += 1
 
-        n = np.sum(self.counts_alpha[chosen_arm]) + np.sum(self.counts_beta[chosen_arm])
+    def batch_update(self, chosen_arm: int, reward: float) -> None:
+        self.data_size += 1
+        self.counts[chosen_arm] += 1
+        if reward == 1:
+            self._counts_alpha[chosen_arm] += 1
+        else:
+            self._counts_beta[chosen_arm] += 1
 
-        new_value = ((n - 1) / n) * self.values[chosen_arm] + (1 / n) * reward
-        self.values[chosen_arm] = new_value
+        if self.data_size % self.batch_size == 0:
+            self.counts_alpha = self._counts_alpha
+            self.counts_beta = self._counts_beta
+        else:
+            pass
