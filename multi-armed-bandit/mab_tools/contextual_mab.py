@@ -37,7 +37,8 @@ class LinUCB(MABInterface):
 
     References
     -------
-    [1] Li, Lihong, Chu, Wei, Langford, John, and Schapire, Robert E.: A contextual-bandit approach to personalized news article recommendation.
+    [1] Li, Lihong, Chu, Wei, Langford, John, and Schapire, Robert E.:
+    A contextual-bandit approach to personalized news article recommendation.
     In Proceedings of the 19th International Conference on World Wide Web, pp. 661–670. ACM, 2010.
     """
 
@@ -121,7 +122,8 @@ class HybridLinUCB(MABInterface):
 
     References
     -------
-    [1] Li, Lihong, Chu, Wei, Langford, John, and Schapire, Robert E.: A contextual-bandit approach to personalized news article recommendation.
+    [1] Li, Lihong, Chu, Wei, Langford, John, and Schapire, Robert E.:
+    A contextual-bandit approach to personalized news article recommendation.
     In Proceedings of the 19th International Conference on World Wide Web, pp. 661–670. ACM, 2010.
     """
 
@@ -248,7 +250,8 @@ class LinTS(MABInterface):
 
     References
     -------
-    [1] 本多淳也, 中村篤祥. バンディット問題の理論とアルゴリズム. 講談社 機械学習プロフェッショナルシリーズ.
+    [1] 本多淳也, 中村篤祥.:
+    バンディット問題の理論とアルゴリズム. 講談社 機械学習プロフェッショナルシリーズ, 2016.
     """
 
     def __init__(self, n_arms: int, feature_dim: int, sigma: float=1.0, warmup: int=15,
@@ -341,9 +344,10 @@ class LogisticTS():
 
     References
     -------
-    [1] 本多淳也, 中村篤祥. バンディット問題の理論とアルゴリズム. 講談社 機械学習プロフェッショナルシリーズ.
+    [1] 本多淳也, 中村篤祥.:
+    バンディット問題の理論とアルゴリズム. 講談社 機械学習プロフェッショナルシリーズ, 2016.
     [2] Chapelle, Olivier and Li, Lihong.:
-     An Empirical Evaluation of Thompson Sam- pling. In NIPS, pp. 2249–2257, 2011.
+    An Empirical Evaluation of Thompson Sampling. In NIPS, pp. 2249–2257, 2011.
     """
 
     def __init__(self, n_arms: int, feature_dim: int, num_trial: int,
@@ -430,7 +434,7 @@ class ACTS(MABInterface):
     References
     -------
     [1] Kristjan Greenewald, Ambuj Tewari, Susan Murphy, and Predag Klasnja.:
-     Action centered contextual bandits. In NIPS, 2017.
+    Action centered contextual bandits. In NIPS, 2017.
     """
 
     def __init__(self, n_arms: int, feature_dim: int, v: float=1.0,
