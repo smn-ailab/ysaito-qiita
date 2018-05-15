@@ -145,7 +145,7 @@ class SoftMax(MABInterface):
 
 
 class UCB1(MABInterface):
-    """Upper Confidence Bound1 Algorithm for Multi-Armed Bandit problems."""
+    """Upper Confidence Bound1 Algorithm for Multi-Armed Bandit problems with rewards provided from gaussian distributions."""
 
     def __init__(self, n_arms: int, batch_size: int=None) -> None:
         """Initialize class.
@@ -213,6 +213,7 @@ class UCB_tuned(MABInterface):
 
     def __init__(self, n_arms: int, batch_size: int=None) -> None:
         """Initialize class.
+
         :param n_arms: the number of given arms.
         :param batch_size: the size of information about rewards given in a update.
         """
@@ -228,6 +229,7 @@ class UCB_tuned(MABInterface):
 
     def select_arm(self) -> int:
         """Decide which arm should be selected.
+
         :return: index of the selected arm.
         """
         if 0 in self.counts:
@@ -244,6 +246,7 @@ class UCB_tuned(MABInterface):
 
     def update(self, chosen_arm: int, reward: float) -> None:
         """Update the information about the arms.
+
         :param chosen_arm: index of the chosen arm.
         :param reward: reward from the chosen arm.
         """
@@ -257,6 +260,7 @@ class UCB_tuned(MABInterface):
 
     def batch_update(self, chosen_arm: int, reward: float) -> None:
         """Update the information about the arms with a new batch of data.
+
         :param chosen_arm: index of the chosen arm.
         :param reward: reward from the chosen arm.
         """
@@ -276,8 +280,8 @@ class UCB_tuned(MABInterface):
             pass
 
 
-class BernoulliThompsonSampling(MABInterface):
-    """Thompson Sampling Algorithm for Multi-Armed Bandit problems when rewards are from Bernoulli distributions."""
+class ThompsonSampling(MABInterface):
+    """Thompson Sampling Algorithm for Multi-Armed Bandit problems with rewards provided from bernouill distributions."""
 
     def __init__(self, n_arms: int, alpha=1.0, beta=1.0, batch_size: int=None) -> None:
         """Initialize class.
@@ -344,6 +348,7 @@ class GaussianThompsonSampling(MABInterface):
 
     def __init__(self, n_arms: int, mu_prior: float=0.0, lam_likelihood: float=1.0, lam_prior: float=1.0, batch_size: int=None) -> None:
         """Initialize class.
+
         :param n_arms: the number of given arms.
         :param mu_prior: a hyper-parameter which represents mu of the prior gaussian distribution. (default=0.0)
         :param lam_prior: a hyper-parameter which represents lambda of the reward gaussian distribution. (default=1.0)
@@ -365,6 +370,7 @@ class GaussianThompsonSampling(MABInterface):
 
     def select_arm(self) -> int:
         """Decide which arm should be selected.
+
         :return: index of the selected arm.
         """
         theta = np.random.normal(loc=self.mu, scale=(1.0 / self.lam))
@@ -372,6 +378,7 @@ class GaussianThompsonSampling(MABInterface):
 
     def update(self, chosen_arm: int, reward: float) -> None:
         """Update the information about the arms.
+
         :param chosen_arm: index of the chosen arm.
         :param reward: reward from the chosen arm.
         """
@@ -382,6 +389,7 @@ class GaussianThompsonSampling(MABInterface):
 
     def batch_update(self, chosen_arm: int, reward: float) -> None:
         """Update the information about the arms with a new batch of data.
+
         :param chosen_arm: index of the chosen arm.
         :param reward: reward from the chosen arm.
         """
