@@ -81,8 +81,6 @@ class EpsilonGreedy(MABInterface):
 
         if self.data_size % self.batch_size == 0:
             self.values = np.copy(self._values)
-        else:
-            pass
 
 
 class SoftMax(MABInterface):
@@ -140,8 +138,6 @@ class SoftMax(MABInterface):
 
         if self.data_size % self.batch_size == 0:
             self.values = np.copy(self._values)
-        else:
-            pass
 
 
 class UCB1(MABInterface):
@@ -204,11 +200,9 @@ class UCB1(MABInterface):
 
         if self.data_size % self.batch_size == 0:
             self.values = np.copy(self._values)
-        else:
-            pass
 
 
-class UCB_tuned(MABInterface):
+class UCBTuned(MABInterface):
     """Upper Confidence Bound1 Algorithm for Multi-Armed Bandit problems with rewards provided from bernouill distributions."""
 
     def __init__(self, n_arms: int, batch_size: int=None) -> None:
@@ -276,8 +270,6 @@ class UCB_tuned(MABInterface):
         if self.data_size % self.batch_size == 0:
             self.values = np.copy(self._values)
             self.sigma = np.copy(self._sigma)
-        else:
-            pass
 
 
 class ThompsonSampling(MABInterface):
@@ -339,8 +331,6 @@ class ThompsonSampling(MABInterface):
         if self.data_size % self.batch_size == 0:
             self.counts_alpha = np.copy(self._counts_alpha)
             self.counts_beta = np.copy(self._counts_beta)
-        else:
-            pass
 
 
 class GaussianThompsonSampling(MABInterface):
@@ -400,5 +390,3 @@ class GaussianThompsonSampling(MABInterface):
         if self.data_size % self.batch_size == 0:
             self.lam = self.counts * self.lam_likelihood + self.lam_prior
             self.mu = (self.lam_likelihood * self.values + self.lam_prior * self.mu_prior) / self.lam
-        else:
-            pass
