@@ -6,6 +6,7 @@
 <p>該当記事</p>
 
 - [バンディットアルゴリズムで最適な介入を見つける（基本編）][1-1]
+- [Thompson Samplingで広告配信を最適化してみた][1-2]
 
 ### 2. propensity-score
 <p> 傾向スコア関連記事の実験ファイルやツール</p>
@@ -22,6 +23,7 @@
 - [傾向スコアを用いて観察データからUpliftをモデリングする（おまけ）][3-3]
 
  [1-1]:https://qiita.com/saitoy/items/ad15394547bd5daf8937
+ [1-2]:
 
  [2-1]:https://qiita.com/saitoy/items/09daccdd91bc98c21dff
 
