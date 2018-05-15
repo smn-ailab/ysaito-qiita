@@ -2,16 +2,13 @@
 import copy
 import time
 
-import matplotlib.pyplot as plt
 import numpy as np
-import pandas as pd
-import seaborn as sns
 from IPython.core.pylabtools import figsize
+import matplotlib.pyplot as plt
 from pandas import DataFrame, Series
 
 import plotly.graph_objs as go
 import plotly.plotly as py
-from plotly.graph_objs import *
 from plotly.offline import init_notebook_mode, iplot, plot
 
 
@@ -45,11 +42,11 @@ def sim_mabs_bern(algo_list: list, arms: list, num_sims: int, horizon: int, algo
         if batch:
             algo.batch_size = batch_size
 
-        for sim in range(num_sims):
+        for sim in np.arange(num_sims):
             a = copy.deepcopy(algo)
-            start = time.time()
 
-            for t in range(horizon):
+            start = time.time()
+            for t in np.arange(horizon):
                 t += 1
                 index = sim * horizon + t - 1
                 sim_nums[index] = sim + 1
@@ -129,11 +126,11 @@ def sim_mabs_norm(algo_list: list, locs: list, scales: list, num_sims: int, hori
         if batch:
             algo.batch_size = batch_size
 
-        for sim in range(num_sims):
+        for sim in np.arange(num_sims):
             a = copy.deepcopy(algo)
-            start = time.time()
 
-            for t in range(horizon):
+            start = time.time()
+            for t in np.arange(horizon):
                 t += 1
                 index = sim * horizon + t - 1
                 sim_nums[index] = sim + 1
@@ -182,11 +179,7 @@ def sim_mabs_norm(algo_list: list, locs: list, scales: list, num_sims: int, hori
     return sim_data_list
 
 
-def sigmoid(x: float) -> float:
-    return (1.0 / 1.0 + np.exp(- x))
-
-
-def sim_conmabs_bern(algo_list: list, arms: np.matrix, scale: float, num_sims: int, horizon: int, algo_name: list, context_key: list,
+def sim_conmabs_bern(algo_list: list, arms: np.matrix, scale: 0.05, num_sims: int, horizon: int, algo_name: list, context_key: list,
                      monitor: bool = False, batch: bool=False, batch_size: int=200) -> pd.DataFrame:
     """Run simulations Contextual Multi-Armed Bandit Algorithms on rewards given by Bernoulli distributions.
 
@@ -203,6 +196,9 @@ def sim_conmabs_bern(algo_list: list, arms: np.matrix, scale: float, num_sims: i
 
     :return: a list of simulation results for each algorithm.
     """
+    def sigmoid(x: float) -> float:
+        return 1.0 / (1.0 + np.exp(- x))
+
     sim_data_list = []
     for i, algo in enumerate(algo_list):
         chosen_arms = np.zeros(num_sims * horizon, dtype=int)
@@ -215,13 +211,13 @@ def sim_conmabs_bern(algo_list: list, arms: np.matrix, scale: float, num_sims: i
         times = np.zeros(num_sims * horizon, dtype=int)
         elapsed_time = np.zeros(num_sims)
 
-        for sim in range(num_sims):
+        for sim in np.arange(num_sims):
             a = copy.deepcopy(algo)
-            start = time.time()
             if batch:
                 a.batch_size = batch_size
 
-            for t in range(horizon):
+            start = time.time()
+            for t in np.arange(horizon):
                 t += 1
                 index = (sim - 1) * horizon + t - 1
                 sim_nums[index] = sim + 1
@@ -236,13 +232,16 @@ def sim_conmabs_bern(algo_list: list, arms: np.matrix, scale: float, num_sims: i
                     chosen_arm = a.select_arm()
                 chosen_arms[index] = chosen_arm
 
-                p = sigmoid(arms[chosen_arm].dot(x) + e)
-                reward = np.random.binomial(n=1, p=p)
+                theta_hat = arms[chosen_arm].dot(x)
+                theta_max = np.max(arms.dot(x))
+
+                reward = np.random.binomial(n=1, p=sigmoid(theta_hat + e))
                 rewards[index] = reward
-                regret = sigmoid(np.max(arms.dot(x))) - (arms[chosen_arm].dot(x))
+
+                regret = sigmoid(theta_max) - sigmoid(theta_hat)
                 regrets[index] = regret
 
-                if chosen_arm == np.argmax(arms.dot(x)):
+                if regret <= 1e-5:
                     successes[index] = 1
 
                 if t == 1:
@@ -254,23 +253,14 @@ def sim_conmabs_bern(algo_list: list, arms: np.matrix, scale: float, num_sims: i
 
                 if context_key[i]:
                     if batch:
-                        a.batch_update(x, chosen_arm, reward[0][0])
+                        a.batch_update(x, chosen_arm, reward)
                     else:
-                        a.update(x, chosen_arm, reward[0][0])
+                        a.update(x, chosen_arm, reward)
                 else:
                     if batch:
-                        a.batch_update(chosen_arm, reward[0][0])
+                        a.batch_update(chosen_arm, reward)
                     else:
-                        a.update(chosen_arm, reward[0][0])
-
-                if monitor:
-                    if t == horizon:
-                        print(f"sim {sim + 1}  100 % done : \
-                        theta_loss {round(np.sqrt(mean_squared_error(arms, np.matrix(a.theta))), 3)}")
-
-                    elif t % (0.25 * horizon) == 0:
-                        print(f"sim {sim + 1} {100 * t / horizon} % done : \
-                        theta_loss {round(np.sqrt(mean_squared_error(arms, np.matrix(a.theta))), 3)}")
+                        a.update(chosen_arm, reward)
 
         elapsed_time[sim] = time.time() - start
         print(f"Avg Elapsed Time({horizon} iter) {algo_name[i]} : {round(np.mean(elapsed_time), 3)}s")
@@ -318,10 +308,10 @@ def sim_conmabs_norm(algo_list: list, arms: np.matrix, scale: float, num_sims: i
 
         for sim in range(num_sims):
             a = copy.deepcopy(algo)
-            start = time.time()
             if batch:
                 a.batch_size = batch_size
 
+            start = time.time()
             for t in range(horizon):
                 t += 1
                 index = (sim - 1) * horizon + t - 1
@@ -337,12 +327,13 @@ def sim_conmabs_norm(algo_list: list, arms: np.matrix, scale: float, num_sims: i
                     chosen_arm = a.select_arm()
                 chosen_arms[index] = chosen_arm
 
-                reward = arms[chosen_arm].dot(x) + e
-                rewards[index] = reward
-                regret = np.max(arms.dot(x)) - arms[chosen_arm].dot(x)
+                reward = arms[chosen_arm].dot(x)
+                rewards[index] = reward + e
+                regret = np.max(arms.dot(x)) - reward
                 regrets[index] = regret
 
-                if chosen_arm == np.argmax(arms.dot(x)):
+                # if chosen_arm == np.argmax(arms.dot(x)):
+                if regret < 1e-5:
                     successes[index] = 1
 
                 if t == 1:
@@ -363,15 +354,6 @@ def sim_conmabs_norm(algo_list: list, arms: np.matrix, scale: float, num_sims: i
                     else:
                         a.update(chosen_arm, reward[0][0])
 
-                if monitor:
-                    if t == horizon:
-                        print(f"sim {sim + 1}  100 % done : \
-                        theta_loss {round(np.sqrt(mean_squared_error(arms, np.matrix(a.theta))), 3)}")
-
-                    elif t % (0.25 * horizon) == 0:
-                        print(f"sim {sim + 1} {100 * t / horizon} % done : \
-                        theta_loss {round(np.sqrt(mean_squared_error(arms, np.matrix(a.theta))), 3)}")
-
         elapsed_time[sim] = time.time() - start
         print(f"Avg Elapsed Time({horizon} iter) {algo_name[i]} : {round(np.mean(elapsed_time), 3)}s")
         sim_data = [sim_nums, times, chosen_arms, rewards, cumulative_rewards,
@@ -387,9 +369,10 @@ def sim_conmabs_norm(algo_list: list, arms: np.matrix, scale: float, num_sims: i
     return sim_data_list
 
 
-def sim_acts_norm(algo_list: list, arms: np.matrix, base: np.matrix,
-                  num_sims: int, horizon: int, algo_name: list, acts_key: list,
-                  monitor: bool = False, batch: bool=False, batch_size: int=200) -> pd.DataFrame:
+def sim_acts_norm(algo_list: list, arms: np.matrix, num_sims: int, horizon: int, algo_name: list, acts_key: list,
+                  base_type: str="random", base_error_scale: float=1.0, lift_error_scale: float=1.0,
+                  lin_base_loc: float=0.0, lin_base_scale: float=1.0, ran_base_loc: float=0.0, ran_base_scale: float=1.0,
+                  batch: bool=False, batch_size: int=200) -> pd.DataFrame:
     """Run simulations Action-Centered Multi-Armed Bandit Algorithms on rewards given by Gaussian distributions.
 
     :param algo_list: a list of simulated algorithms.
@@ -406,7 +389,6 @@ def sim_acts_norm(algo_list: list, arms: np.matrix, base: np.matrix,
     :return: a list of simulation results for each algorithm.
     """
     sim_data_list = []
-    base_arms = np.concatenate([np.matrix(np.zeros(arms.shape[1])), arms], axis=0)
     for i, algo in enumerate(algo_list):
 
         n_arms = arms.shape[0]
@@ -425,43 +407,54 @@ def sim_acts_norm(algo_list: list, arms: np.matrix, base: np.matrix,
 
         for sim in range(num_sims):
             a = copy.deepcopy(algo)
-            start = time.time()
             if batch:
                 a.batch_size = batch_size
 
+            start = time.time()
             for t in range(horizon):
                 t += 1
                 index = (sim - 1) * horizon + t - 1
                 sim_nums[index] = sim + 1
                 times[index] = t
 
-                x = np.matrix(np.clip(np.random.normal(loc=5, scale=2, size=dim), 0, 30)).T
-                #x = np.matrix(np.random.randint(2, size=dim)).T
-                e1 = np.random.normal(loc=0, scale=1.0)
-                e2 = np.random.normal(loc=0, scale=1.0)
+                x = np.matrix((np.random.randint(2, size=dim - 1))).T
+                x = np.concatenate([x, np.matrix(np.array([1])).T])
+                e1 = np.random.normal(loc=0, scale=base_error_scale)
+                e2 = np.random.normal(loc=0, scale=lift_error_scale)
 
                 chosen_arm = a.select_arm(x)
                 chosen_arms[index] = chosen_arm
 
-                #base_reward = base.dot(x) + e1
-                base_reward = np.clip(np.random.normal(30, 30), 0, 60)
+                if base_type == "linear":
+                    base_reward = np.matrix([np.random.normal(loc=lin_base_loc, scale=lin_base_scale, size=dim)]).dot(x) + e1
+                elif base_type == "random":
+                    base_reward = np.matrix(np.random.normal(loc=ran_base_loc, scale=ran_base_scale) + e1)
                 base_rewards[index] = base_reward
+                max_reward = np.max(arms.dot(x))
+                if max_reward < 0:
+                    i_max = 0
+                    max_reward = 0
+                else:
+                    i_max = np.argmax(arms.dot(x))
 
                 if acts_key[i]:
-                    lift = base_arms[chosen_arm].dot(x)
-                    reward = base_arms[chosen_arm].dot(x) + base_reward + e2
+                    if chosen_arm == 0:
+                        lift = 0
+                        reward = base_reward
+                    else:
+                        lift = arms[chosen_arm - 1].dot(x) + e2
+                        reward = base_reward + lift
                     rewards[index] = reward
-                    regret = np.max(base_arms.dot(x)) - base_arms[chosen_arm].dot(x)
-
-                    if chosen_arm == np.argmax(base_arms.dot(x)):
+                    regret = max_reward - lift
+                    if chosen_arm == i_max:
                         successes[index] = 1
-                else:
-                    lift = arms[chosen_arm].dot(x)
-                    reward = arms[chosen_arm].dot(x) + base_reward + e2
-                    rewards[index] = reward
-                    regret = np.max(base_arms.dot(x)) - arms[chosen_arm].dot(x)
 
-                    if (chosen_arm + 1) == np.argmax(base_arms.dot(x)):
+                else:
+                    lift = arms[chosen_arm].dot(x) + e2
+                    reward = lift + base_reward
+                    rewards[index] = reward
+                    regret = max_reward - lift
+                    if (chosen_arm + 1) == i_max:
                         successes[index] = 1
 
                 regrets[index] = regret
@@ -479,15 +472,6 @@ def sim_acts_norm(algo_list: list, arms: np.matrix, base: np.matrix,
                     a.batch_update(x, chosen_arm, reward[0][0])
                 else:
                     a.update(x, chosen_arm, reward[0][0])
-
-                if monitor:
-                    if t == horizon:
-                        print(f"sim {sim + 1}  100 % done : \
-                        theta_loss {round(np.sqrt(mean_squared_error(arms, np.matrix(a.theta))), 3)}")
-
-                    elif t % (0.25 * horizon) == 0:
-                        print(f"sim {sim + 1} {100 * t / horizon} % done : \
-                        theta_loss {round(np.sqrt(mean_squared_error(arms, np.matrix(a.theta))), 3)}")
 
         elapsed_time[sim] = time.time() - start
         print(f"Avg Elapsed Time({horizon} iter) {algo_name[i]} : {round(np.mean(elapsed_time), 3)}s")
@@ -565,7 +549,7 @@ def average_rewards(df_list: list, name_list: list) -> go.Figure:
         yaxis=dict(title="Average Rewards"),
         title="Average Rewards")
     fig = go.Figure(data=data, layout=layout)
-    iplot(fig)
+    return fig
 
 
 def cumulative_rewards(df_list: list, name_list: list) -> go.Figure:
@@ -592,7 +576,7 @@ def cumulative_rewards(df_list: list, name_list: list) -> go.Figure:
         yaxis=dict(title="Average Reward"),
         title="Cumulative Rewards")
     fig = go.Figure(data=data, layout=layout)
-    iplot(fig)
+    return fig
 
 
 def success_rate(df_list: list, name_list: list) -> go.Figure:
