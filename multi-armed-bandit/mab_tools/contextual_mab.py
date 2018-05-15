@@ -113,8 +113,6 @@ class LinUCB(MABInterface):
         if self.data_size % self.batch_size == 0:
             self.A_inv = copy.deepcopy(self._A_inv)  # d * d
             self.b = copy.deepcopy(self._b)  # d * 1
-        else:
-            pass
 
 
 class HybridLinUCB(MABInterface):
@@ -241,8 +239,6 @@ class HybridLinUCB(MABInterface):
             self.A_inv = copy.deepcopy(self._A_inv)
             self.B = copy.deepcopy(self._B)
             self.b = copy.deepcopy(self._b)
-        else:
-            pass
 
 
 class LinTS(MABInterface):
@@ -335,8 +331,6 @@ class LinTS(MABInterface):
         if self.data_size % self.batch_size == 0:
             self.A_inv = copy.deepcopy(self._A_inv)  # d * d
             self.b = copy.deepcopy(self._b)  # d * 1
-        else:
-            pass
 
 
 class LogisticTS():
@@ -425,6 +419,12 @@ class LogisticTS():
         return _theta_hat.A.reshape(self.feature_dim * self.n_arms), _hessian_inv
 
     def batch_update(self, user_x: np.matrix, chosen_arm: int, reward: float) -> None:
+        """Update the information about the arms with a new batch of data.
+
+        :param x: observed context matrix.
+        :param chosen_arm: index of the chosen arm.
+        :param reward: reward from the chosen arm.
+        """
         self.update(user_x, chosen_arm, reward)
 
 
@@ -536,5 +536,3 @@ class ACTS(MABInterface):
             self.B_inv = copy.deepcopy(self._B_inv)  # d * d
             self.b = copy.deepcopy(self._b)  # d * 1
             self.theta = copy.deepcopy(self._theta)
-        else:
-            pass
