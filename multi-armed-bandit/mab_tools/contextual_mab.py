@@ -33,7 +33,13 @@ class MABInterface(ABC):
 
 
 class LinUCB(MABInterface):
-    """Linear Upper Confidence Bound Algorithm for Contextual Multi-Armed Bandit Problem."""
+    """Linear Upper Confidence Bound Algorithm for Contextual Multi-Armed Bandit Problem.
+
+    References
+    -------
+    [1] Li, Lihong, Chu, Wei, Langford, John, and Schapire, Robert E.: A contextual-bandit approach to personalized news article recommendation.
+    In Proceedings of the 19th International Conference on World Wide Web, pp. 661–670. ACM, 2010.
+    """
 
     def __init__(self, n_arms: int, feature_dim: int, alpha: float =1.0, warmup: int =15, batch_size: int=0) -> None:
         """Initialize class.
@@ -111,7 +117,13 @@ class LinUCB(MABInterface):
 
 
 class HybridLinUCB(MABInterface):
-    """Hybrid Linear Upper Confidence Bound Algorithm for Contextual Multi-Armed Bandit Problem."""
+    """Hybrid Linear Upper Confidence Bound Algorithm for Contextual Multi-Armed Bandit Problem.
+
+    References
+    -------
+    [1] Li, Lihong, Chu, Wei, Langford, John, and Schapire, Robert E.: A contextual-bandit approach to personalized news article recommendation.
+    In Proceedings of the 19th International Conference on World Wide Web, pp. 661–670. ACM, 2010.
+    """
 
     def __init__(self, n_arms: int, z_dim: int, x_dim: int, alpha: float =1.0, warmup: int =15, batch_size: int=0) -> None:
         """Initialize class.
@@ -232,7 +244,12 @@ class HybridLinUCB(MABInterface):
 
 
 class LinTS(MABInterface):
-    """Linear Thompson Sampling Algorithm for Contextual Multi - Armed Bandit Problem"""
+    """Linear Thompson Sampling Algorithm for Contextual Multi - Armed Bandit Problem
+
+    References
+    -------
+    [1] 本多淳也, 中村篤祥. バンディット問題の理論とアルゴリズム. 講談社 機械学習プロフェッショナルシリーズ.
+    """
 
     def __init__(self, n_arms: int, feature_dim: int, sigma: float=1.0, warmup: int=15,
                  sample_batch_size: int=20, batch_size: int=100) -> None:
@@ -320,7 +337,14 @@ class LinTS(MABInterface):
 
 
 class LogisticTS():
-    """Logistic Thompson Sampling Algorithm for Contextual Multi-Armed Bandit Problem"""
+    """Logistic Thompson Sampling Algorithm for Contextual Multi-Armed Bandit Problem
+
+    References
+    -------
+    [1] 本多淳也, 中村篤祥. バンディット問題の理論とアルゴリズム. 講談社 機械学習プロフェッショナルシリーズ.
+    [2] Chapelle, Olivier and Li, Lihong.:
+     An Empirical Evaluation of Thompson Sam- pling. In NIPS, pp. 2249–2257, 2011.
+    """
 
     def __init__(self, n_arms: int, feature_dim: int, num_trial: int,
                  repeat: int= 1, warmup: int = 5, lam: float =0.1,
@@ -401,7 +425,13 @@ class LogisticTS():
 
 
 class ACTS(MABInterface):
-    """Action Centered Thompson Sampling Algorithm for Contextual Multi - Armed Bandit Problem"""
+    """Action Centered Thompson Sampling Algorithm for Contextual Multi-Armed Bandit Problem
+
+    References
+    -------
+    [1] Kristjan Greenewald, Ambuj Tewari, Susan Murphy, and Predag Klasnja.:
+     Action centered contextual bandits. In NIPS, 2017.
+    """
 
     def __init__(self, n_arms: int, feature_dim: int, v: float=1.0,
                  pi_min: float=0.1, pi_max: float=0.9, warmup: int=10,
