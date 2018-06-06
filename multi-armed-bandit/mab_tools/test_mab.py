@@ -180,7 +180,7 @@ def sim_mabs_norm(algo_list: list, locs: list, scales: list, num_sims: int, hori
 
 
 def sim_conmabs_bern(algo_list: list, arms: np.matrix, scale: 0.05, num_sims: int, horizon: int, algo_name: list, context_key: list,
-                     monitor: bool = False, batch: bool=False, batch_size: int=200) -> pd.DataFrame:
+                     monitor: bool = False, batch: bool=False, batch_size: int=200) -> DataFrame:
     """Run simulations Contextual Multi-Armed Bandit Algorithms on rewards given by Bernoulli distributions.
 
     :param algo_list: a list of simulated algorithms.
@@ -278,7 +278,7 @@ def sim_conmabs_bern(algo_list: list, arms: np.matrix, scale: 0.05, num_sims: in
 
 
 def sim_conmabs_norm(algo_list: list, arms: np.matrix, scale: float, num_sims: int, horizon: int, algo_name: list, context_key: list,
-                     monitor: bool = False, batch: bool=False, batch_size: int=200) -> pd.DataFrame:
+                     monitor: bool = False, batch: bool=False, batch_size: int=200) -> DataFrame:
     """Run simulations Contextual Multi-Armed Bandit Algorithms on rewards given by Gaussian distributions.
 
     :param algo_list: a list of simulated algorithms.
@@ -372,7 +372,7 @@ def sim_conmabs_norm(algo_list: list, arms: np.matrix, scale: float, num_sims: i
 def sim_acts_norm(algo_list: list, arms: np.matrix, num_sims: int, horizon: int, algo_name: list, acts_key: list,
                   base_type: str="random", base_error_scale: float=1.0, lift_error_scale: float=1.0,
                   lin_base_loc: float=0.0, lin_base_scale: float=1.0, ran_base_loc: float=0.0, ran_base_scale: float=1.0,
-                  batch: bool=False, batch_size: int=200) -> pd.DataFrame:
+                  batch: bool=False, batch_size: int=200) -> DataFrame:
     """Run simulations Action-Centered Multi-Armed Bandit Algorithms on rewards given by Gaussian distributions.
 
     :param algo_list: a list of simulated algorithms.
@@ -507,7 +507,7 @@ def mab_plots(df_list: list, name_list: list, metric: str) -> go.Figure:
         _alpha = 1.0
 
     for df, name in zip(df_list, name_list):
-        trace = Scatter(x=df.mean(level="times").index,
+        trace = go.Scatter(x=df.mean(level="times").index,
                         y=df.mean(level="times")[metric],
                         opacity=_alpha,
                         line={"width": _lw},
@@ -535,7 +535,7 @@ def average_rewards(df_list: list, name_list: list) -> go.Figure:
     """
     data = []
     for df, name in zip(df_list, name_list):
-        trace = Scatter(x=df.mean(level="times").index,
+        trace = go.Scatter(x=df.mean(level="times").index,
                         y=df.mean(level="times").reward,
                         opacity=0.9,
                         line={"width": 1.5},
@@ -563,7 +563,7 @@ def cumulative_rewards(df_list: list, name_list: list) -> go.Figure:
     """
     data = []
     for df, name in zip(df_list, name_list):
-        trace = Scatter(x=df.mean(level="times").index,
+        trace = go.Scatter(x=df.mean(level="times").index,
                         y=df.mean(level="times").cumulative_rewards,
                         mode="lines",
                         line={"width": 3},
@@ -590,7 +590,7 @@ def success_rate(df_list: list, name_list: list) -> go.Figure:
     """
     data = []
     for df, name in zip(df_list, name_list):
-        trace = Scatter(x=df.mean(level="times").index,
+        trace = go.Scatter(x=df.mean(level="times").index,
                         y=df.mean(level="times").successes,
                         opacity=0.9,
                         line={"width": 1.5},
