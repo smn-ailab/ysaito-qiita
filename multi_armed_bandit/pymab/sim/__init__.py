@@ -1,1 +1,1 @@
-from .sim import BernoulliBandit, GaussianBandit, BanditSimulator, BaseBandit
+from .sim import BanditSimulator
