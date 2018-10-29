@@ -26,18 +26,19 @@ class BaseBandit():
 
     """
 
-    def __init__(self, n_arms: int, n_features: Optional[int]=None,
-                 noise: Optional[float]=None, contextual: bool=False) -> None:
+    def __init__(self, n_arms: int, n_features: Optional[int]=None, scale: float=0.1,
+                 noise: float=0.1, contextual: bool=False) -> None:
         """Initialize Class."""
         self.rewards = 0.0
         self.regrets = 0.0
         self.n_arms = n_arms
         self.contextual = contextual
         if self.contextual:
+            self.scale = scale
             self.noise = noise
             self.n_features = n_features
             self.params = np.random.multivariate_normal(np.zeros(self.n_features),
-                                                        np.identity(self.n_features), size=self.n_arms).T
+                                                        self.scale * np.identity(self.n_features), size=self.n_arms).T
         else:
             self.mu = np.random.uniform(low=0.01, high=0.1, size=n_arms)
             self.mu_max, self.best_arm = np.max(self.mu), np.argmax(self.mu)
@@ -67,7 +68,7 @@ class BernoulliBandit(BaseBandit):
     n_features: int
         The dimention of context vectors.
 
-    noise: int, optional(default=None)
+    noise: float, optional(default=0.1)
         The variance of gaussian noise on linear model of contextual rewards.
 
     contextual: bool, optional(default=False)
@@ -75,10 +76,10 @@ class BernoulliBandit(BaseBandit):
 
     """
 
-    def __init__(self, n_arms: int, n_features: Optional[int]=None,
-                 noise: Optional[float]=None, contextual: bool=False) -> None:
+    def __init__(self, n_arms: int, n_features: Optional[int]=None, scale: float=0.1,
+                 noise: float=0.1, contextual: bool=False) -> None:
         """Initialize Class."""
-        super().__init__(n_arms=n_arms, n_features=n_features, noise=noise, contextual=contextual)
+        super().__init__(n_arms=n_arms, n_features=n_features, scale=scale, noise=noise, contextual=contextual)
 
     def pull(self, chosen_arm: int, x: Optional[np.ndarray]=None) -> Union[int, float]:
         """Pull arms.
@@ -125,11 +126,10 @@ class GaussianBandit(BaseBandit):
 
     """
 
-    def __init__(self, n_arms: int, n_features: Optional[int]=None,
-                 scale: float=1.0, noise: Optional[float]=None, contextual: bool=False) -> None:
+    def __init__(self, n_arms: int, n_features: Optional[int]=None, scale: float=0.1,
+                 noise: float=0.1, contextual: bool=False) -> None:
         """Initialize Class."""
-        super().__init__(n_arms=n_arms, n_features=n_features, noise=noise, contextual=contextual)
-        self.scale = scale
+        super().__init__(n_arms=n_arms, n_features=n_features, scale=scale, noise=noise, contextual=contextual)
 
     def pull(self, chosen_arm: int, x: Optional[np.ndarray]=None) -> Union[int, float]:
         """Pull arms.
