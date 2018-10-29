@@ -5,8 +5,8 @@ from typing import List, Optional, Tuple, Union
 import numpy as np
 from pandas import DataFrame
 
+from pymab.bandit import BaseBandit
 from pymab.policy import BaseContextualPolicy, BasePolicy, BaseThompsonSampling
-from pymab.sim import BaseBandit
 
 
 class DataGenerator():
