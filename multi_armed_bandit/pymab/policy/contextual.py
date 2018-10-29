@@ -47,7 +47,7 @@ class LinUCB(BaseContextualPolicy):
         self.alpha = alpha
         self.name = f"LinUCB(α={self.alpha})"
 
-        self.theta = np.zeros((self.n_features, self.n_arms))  # d * k
+        self.theta_hat = np.zeros((self.n_features, self.n_arms))  # d * k
         self.A_inv = np.concatenate([np.identity(self.n_features)
                                      for i in np.arange(self.n_arms)]).reshape(self.n_arms, self.n_features, self.n_features)  # k * d * d
         self.b = np.zeros((self.n_features, self.n_arms))  # d * k
@@ -74,10 +74,10 @@ class LinUCB(BaseContextualPolicy):
             result = np.argmax(np.array(self.counts < self.warmup, dtype=int))
         else:
             x = _check_x_input(x)
-            self.theta = np.concatenate([self.A_inv[i] @ np.expand_dims(self.b[:, i], axis=1)
-                                         for i in np.arange(self.n_arms)], axis=1)  # user_dim * n_arms
+            self.theta_hat = np.concatenate([self.A_inv[i] @ np.expand_dims(self.b[:, i], axis=1)
+                                             for i in np.arange(self.n_arms)], axis=1)  # user_dim * n_arms
             sigma_hat = np.concatenate([np.sqrt(x.T @ self.A_inv[i] @ x) for i in np.arange(self.n_arms)], axis=1)  # 1 * n_arms
-            result = np.argmax(x.T @ self.theta + self.alpha * sigma_hat)
+            result = np.argmax(x.T @ self.theta_hat + self.alpha * sigma_hat)
         return result
 
     def update(self, x: np.matrix, chosen_arm: int, reward: Union[int, float]) -> None:
@@ -147,7 +147,7 @@ class HybridLinUCB(BaseContextualPolicy):
         self.name = f"HybridLinUCB(α={self.alpha})"
 
         self.beta = np.zeros(self.z_dim)
-        self.theta = np.zeros((self.x_dim, self.n_arms))  # d * k
+        self.theta_hat = np.zeros((self.x_dim, self.n_arms))  # d * k
 
         # matrices which are common to all context
         self.A_zero, self.b_zero = np.identity(self.z_dim), np.zeros((self.z_dim, 1))  # k * k, k * 1
@@ -183,8 +183,8 @@ class HybridLinUCB(BaseContextualPolicy):
         else:
             z, x = _check_x_input(x[:self.z_dim]), _check_x_input(x[self.z_dim:])
             self.beta = np.linalg.inv(self.A_zero) @ self.b_zero  # k * 1
-            self.theta = np.concatenate([(self.A_inv[i] @ (np.expand_dims(self.b[:, i], axis=1) - self.B[i] @ self.beta))
-                                         for i in np.arange(self.n_arms)], axis=1)
+            self.theta_hat = np.concatenate([(self.A_inv[i] @ (np.expand_dims(self.b[:, i], axis=1) - self.B[i] @ self.beta))
+                                             for i in np.arange(self.n_arms)], axis=1)
             s1 = z.T @ np.linalg.inv(self.A_zero) @ z
             s2 = - 2 * np.concatenate([z.T @ np.linalg.inv(self.A_zero) @ self.B[i].T @ self.A_inv[i] @ x
                                        for i in np.arange(self.n_arms)], axis=1)
@@ -192,7 +192,7 @@ class HybridLinUCB(BaseContextualPolicy):
             s4 = np.concatenate([x.T @ self.A_inv[i] @ self.B[i] @ np.linalg.inv(self.A_zero) @ self.B[i].T @ self.A_inv[i] @ x
                                  for i in np.arange(self.n_arms)], axis=1)
             sigma_hat = s1 + s2 + s3 + s4
-            result = np.argmax(z.T @ self.beta + x.T @ self.theta + self.alpha * sigma_hat)
+            result = np.argmax(z.T @ self.beta + x.T @ self.theta_hat + self.alpha * sigma_hat)
         return result
 
     def update(self, x: np.ndarray, chosen_arm: int, reward: float) -> None:
@@ -245,6 +245,9 @@ class LinTS(BaseContextualPolicy):
     warmup: int, optional(default=1)
         The minimum number of pull of earch arm.
 
+    sample_batch: int, optional (default=1)
+        How often the policy sample new parameters.
+
     batch_size: int, optional (default=1)
         The number of data given in each batch.
 
@@ -254,14 +257,16 @@ class LinTS(BaseContextualPolicy):
 
     """
 
-    def __init__(self, n_arms: int, n_features: int, sigma: float=1.0, warmup: int=1, batch_size: int=1) -> None:
+    def __init__(self, n_arms: int, n_features: int, sigma: float=1.0,
+                 warmup: int=1, sample_batch: int=1, batch_size: int=1) -> None:
         """Initialize class."""
         super().__init__(n_arms, n_features, warmup, batch_size)
 
         self.sigma = sigma
+        self.sample_batch = sample_batch
         self.name = f"LinTS(σ={self.sigma})"
 
-        self.theta = np.zeros((self.n_features, self.n_arms))
+        self.theta_hat, self.theta_tilde = np.zeros((self.n_features, self.n_arms)), np.zeros((self.n_features, self.n_arms))
         self.A_inv = np.concatenate([np.identity(self.n_features)
                                      for i in np.arange(self.n_arms)]).reshape(self.n_arms, self.n_features, self.n_features)  # k * d * d
         self.b = np.zeros((self.n_features, self.n_arms))  # d * k
@@ -288,11 +293,12 @@ class LinTS(BaseContextualPolicy):
             result = np.argmax(np.array(self.counts < self.warmup, dtype=int))
         else:
             x = _check_x_input(x)
-            self.theta = np.concatenate([self.A_inv[i] @ np.expand_dims(self.b[:, i], axis=1)
-                                         for i in np.arange(self.n_arms)], axis=1)
-            theta_tilde = np.concatenate([np.expand_dims(np.random.multivariate_normal(self.theta[:, i], self.A_inv[i]), axis=1)
-                                          for i in np.arange(self.n_arms)], axis=1)
-            result = np.argmax(x.T @ theta_tilde)
+            if self.data_size % self.sample_batch == 0:
+                self.theta_hat = np.concatenate([self.A_inv[i] @ np.expand_dims(self.b[:, i], axis=1)
+                                                 for i in np.arange(self.n_arms)], axis=1)
+                self.theta_tilde = np.concatenate([np.expand_dims(np.random.multivariate_normal(self.theta_hat[:, i], self.A_inv[i]), axis=1)
+                                                   for i in np.arange(self.n_arms)], axis=1)
+            result = np.argmax(x.T @ self.theta_tilde)
 
         return result
 
@@ -339,6 +345,9 @@ class LogisticTS(BaseContextualPolicy):
     n_iter: int, optional(default=1)
         The num of iteration of newton method in each parameter update.
 
+    sample_batch: int, optional (default=1)
+        How often the policy sample new parameters.
+
     warmup: int, optional(default=1)
         The minimum number of pull of earch arm.
 
@@ -354,19 +363,20 @@ class LogisticTS(BaseContextualPolicy):
     """
 
     def __init__(self, n_arms: int, n_features: int, sigma: float=0.1,
-                 n_iter: int=1, warmup: int=1, batch_size: int=1) -> None:
+                 n_iter: int=1, warmup: int=1, sample_batch: int=1,  batch_size: int=1) -> None:
         """Initialize Class."""
         super().__init__(n_arms, n_features, warmup, batch_size)
 
         self.sigma = sigma
         self.n_iter = n_iter
+        self.sample_batch = sample_batch
         self.name = f"LogisticTS(σ={self.sigma})"
 
         self.data_stock: list = [[] for i in np.arange(self.n_arms)]
         self.reward_stock: list = [[] for i in np.arange(self.n_arms)]
 
         # array - (n_arms * user_dim),
-        self.theta_hat = np.zeros((self.n_features, self.n_arms))
+        self.theta_hat, self.theta_tilde = np.zeros((self.n_features, self.n_arms)), np.zeros((self.n_features, self.n_arms))
         self.hessian_inv = np.concatenate([np.identity(self.n_features)
                                            for i in np.arange(self.n_arms)]).reshape(self.n_arms, self.n_features, self.n_features)
 
@@ -388,9 +398,10 @@ class LogisticTS(BaseContextualPolicy):
             result = np.argmax(np.array(self.counts < self.warmup, dtype=int))
         else:
             x = _check_x_input(x)
-            theta_tilde = np.concatenate([np.expand_dims(np.random.multivariate_normal(self.theta_hat[:, i], self.hessian_inv[i]), axis=1)
-                                          for i in np.arange(self.n_arms)], axis=1)
-            result = np.argmax(x.T @ theta_tilde)
+            if self.data_size % self.sample_batch == 0:
+                self.theta_tilde = np.concatenate([np.expand_dims(np.random.multivariate_normal(self.theta_hat[:, i], self.hessian_inv[i]), axis=1)
+                                                   for i in np.arange(self.n_arms)], axis=1)
+            result = np.argmax(x.T @ self.theta_tilde)
         return result
 
     def update(self, x: np.ndarray, chosen_arm: int, reward: float) -> None:
