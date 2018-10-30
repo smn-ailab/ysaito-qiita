@@ -182,8 +182,7 @@ class DirectMethod(OPEInterface):
 
                     reward = _r_pred_boot[chosen_arm]
                     rewards.append(reward)
-                    if chosen_arm == _a:
-                        p.update(x, chosen_arm, _r) if p._policy_type == "contextual" else p.update(chosen_arm, _r)
+                    p.update(x, chosen_arm, reward) if p._policy_type == "contextual" else p.update(chosen_arm, reward)
 
                 values[i, j] = np.mean(rewards)
 
@@ -264,7 +263,7 @@ class IPSEstimator(OPEInterface):
                     if chosen_arm == _a:
                         reward = _r / _ps[chosen_arm]
                         rewards.append(reward)
-                        p.update(x, chosen_arm, _r) if p._policy_type == "contextual" else p.update(chosen_arm, _r)
+                        p.update(x, chosen_arm, reward) if p._policy_type == "contextual" else p.update(chosen_arm, reward)
 
                 values[i, j] = np.mean(rewards)
 
@@ -368,8 +367,7 @@ class DREstimator(OPEInterface):
 
                     reward = (np.array(chosen_arm == _a, dtype=int) * (_r - _r_pred[chosen_arm]) / _ps[chosen_arm]) + _r_pred[chosen_arm]
                     rewards.append(reward)
-                    if chosen_arm == _a:
-                        p.update(x, chosen_arm, _r) if p._policy_type == "contextual" else p.update(chosen_arm, _r)
+                    p.update(x, chosen_arm, reward) if p._policy_type == "contextual" else p.update(chosen_arm, reward)
 
                 values[i, j] = np.mean(rewards)
 
