@@ -6,13 +6,13 @@ import numpy as np
 
 def sigmoid(x: np.ndarray) -> float:
     """Sigmoid function."""
-    return 0.5 + 0.5 * np.tanh(0.5 * x)
+    return 1 / (1 + np.exp(-x))
 
 
 def _check_stochastic_input(n_arms: int, batch_size: int) -> None:
 
     if not isinstance(n_arms, int):
-        raise TypeError("n_arms must be a float.")
+        raise TypeError("n_arms must be an integer.")
     if not isinstance(batch_size, int):
         raise TypeError("batch_size must be an integer.")
 
@@ -20,7 +20,7 @@ def _check_stochastic_input(n_arms: int, batch_size: int) -> None:
 def _check_contextual_input(n_arms: int, n_features: int, warmup: int, batch_size: int) -> None:
 
     if not isinstance(n_arms, int):
-        raise TypeError("n_arms must be a float.")
+        raise TypeError("n_arms must be an integer.")
     if not isinstance(n_features, int):
         raise TypeError("n_features must be an integer.")
     if not isinstance(warmup, int):
