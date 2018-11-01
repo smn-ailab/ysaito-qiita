@@ -180,7 +180,7 @@ class DirectMethod(OPEInterface):
                     x = np.array(_x)
                     chosen_arm = p.select_arm(x) if p._policy_type == "contextual" else p.select_arm()
 
-                    reward = _r_pred_boot[chosen_arm]
+                    reward = _r_pred[chosen_arm]
                     rewards.append(reward)
                     p.update(x, chosen_arm, reward) if p._policy_type == "contextual" else p.update(chosen_arm, reward)
 
